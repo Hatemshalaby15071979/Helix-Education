@@ -1,7 +1,7 @@
 S000-03 Phase B — KMS Migration Implementation Plan
 
 Date: 2026-07-25
-Owner: HatemShelby <hatem13071979@gmail.com>
+Owner: Hatem Shalaby
 Target timeline: Start immediately; complete in 7 days (due 2026-08-01)
 Recommended provider: HashiCorp Vault (OSS) — free/self-hosted, transit & KV v2 engines
 

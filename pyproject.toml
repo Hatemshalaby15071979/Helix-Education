@@ -33,11 +33,11 @@ helix-web = "helix_education.web_server:main"
 helix-web-v2 = "helix_education.web_server_v2:main"
 
 [project.urls]
-Homepage = "https://github.com/HatemIsmailShalaby1979/Helix-Education"
-Repository = "https://github.com/HatemIsmailShalaby1979/Helix-Education"
+Homepage = "https://github.com/<YOUR_GITHUB_ORG>/Helix-Education"
+Repository = "https://github.com/<YOUR_GITHUB_ORG>/Helix-Education"
 
 [tool.setuptools.packages.find]
-include = ["state_core*", "learning_service*", "content_engine*", "quiz_engine*", "progress_engine*", "delivery_engine*", "api_layer*", "helix_education*", "grounding_engine*", "observability*"]
+include = ["state_core*", "learning_service*", "content_engine*", "quiz_engine*", "progress_engine*", "delivery_engine*", "api_layer*", "helix_education*", "grounding_engine*", "observability*", "cognitive_agent*", "cognitive_engine*", "analytics_engine*"]
 
 [tool.ruff]
 line-length = 120
