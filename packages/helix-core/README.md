@@ -11,6 +11,25 @@ helix-core --port 8765              # loopback only
 HELIX_CORE_TOKEN=... helix-core     # require a bearer token
 ```
 
+### Sidecar mode
+
+A desktop shell that bundles this binary cannot know the port in advance.
+Start it with `--handshake` and read one line of stdout:
+
+```bash
+$ helix-core --port 0 --handshake
+{"event":"ready","port":44291,"token":"vDzm6IrvQNgl-..."}
+```
+
+The socket is bound before the line is printed, so the port is real by the
+time the parent reads it. With `--handshake` and no `--token`, a random token
+is generated and printed; it is never written to disk. The parent should read
+lines until one parses as JSON with `"event": "ready"` and ignore the rest —
+uvicorn logs to stdout as well.
+
+The caller is responsible for terminating the process; `helix-core` shuts
+down cleanly on SIGTERM.
+
 | Endpoint | Purpose |
 |---|---|
 | `GET /v1/health` | liveness and event count |
