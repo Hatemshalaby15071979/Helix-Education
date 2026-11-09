@@ -431,7 +431,9 @@ class _Handler(BaseHTTPRequestHandler):
         params = parse_qs(parsed.query)
 
         try:
-            if path == "/":
+            if path == "/health":
+                self._send(json.dumps({"status": "ok"}), 200, "application/json")
+            elif path == "/":
                 self._page("Dashboard", self._dashboard(), "home")
             elif path == "/learn":
                 self._page("Learn", self._learn(params), "learn")
@@ -1208,7 +1210,7 @@ RESPOND WITH VALID JSON ONLY:
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def main(host: str = "0.0.0.0", port: int = 8080):
+def main(host: str = "127.0.0.1", port: int = 8080):
     print("🚀 Starting Helix Education Center V2...")
     print(f"   Model: {OLLAMA_MODEL}")
     print("   Grounding: Web search (authoritative sources)")

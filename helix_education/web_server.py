@@ -474,7 +474,7 @@ Score: {summary["passed_count"]}/{summary["total_items"]} correct ({summary["ave
         self.end_headers()
 
 
-def main(host: str = "0.0.0.0", port: int = 8080):
+def main(host: str = "127.0.0.1", port: int = 8080):
     store = EventStore(StoreConfig(path="helix_events.jsonl"))
     ks = SealedAnswerKeyStore()
     l = LearningService(store, ks)

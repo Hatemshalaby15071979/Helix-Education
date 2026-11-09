@@ -51,6 +51,7 @@ class Router:
         self._feedback = feedback_service
         self._content = content_service
         self._quiz = quiz_service
+        self._cog = cognitive_service
 
     def get_metrics(self) -> Response:
         """Expose metrics in Prometheus text format."""
@@ -76,7 +77,6 @@ class Router:
             output.append(f"{safe_name}_count {stats['count']}")
 
         return Response(content="\n".join(output), media_type="text/plain")
-        self._cog = cognitive_service
 
     # ── Topic Lifecycle ───────────────────────────────────────────
 
