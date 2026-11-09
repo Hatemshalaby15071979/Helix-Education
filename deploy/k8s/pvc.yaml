@@ -1,0 +1,23 @@
+# The SQLite database and the sealed-key HMAC secret both live here.
+#
+# ReadWriteOnce is required, not a limitation to work around: SQLite is a
+# single-writer database, and the Deployment is pinned to one replica with a
+# Recreate strategy. Do not change this to ReadWriteMany to "scale out" —
+# two pods writing the same database file corrupts it.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: helix-core-data
+  namespace: helix-education
+  labels:
+    app.kubernetes.io/name: helix-core
+    app.kubernetes.io/part-of: helix-education
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  # Omit storageClassName to use the cluster default. Set it explicitly when
+  # the default is not backed by durable storage.
+  # storageClassName: standard

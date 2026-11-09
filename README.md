@@ -118,6 +118,28 @@ Build the wheel:
 python -m build --wheel --outdir dist
 ```
 
+### Container image
+
+The core also ships as a container. The image contains `helix_core/` only —
+no Ollama client, no scraper.
+
+```bash
+docker build -t helix-core:2.1.0 .
+docker run --rm -p 127.0.0.1:8765:8000 \
+  -e HELIX_CORE_SECRET=dev-secret -e HELIX_CORE_TOKEN=dev-token \
+  helix-core:2.1.0
+```
+
+`.github/workflows/docker.yml` builds it, runs a register/answer/score smoke
+test against `/v1/health`, and pushes `ghcr.io/<owner>/helix-core:{2.1.0,<sha>,latest}`
+on `main` and `v*` tags.
+
+Kubernetes manifests live in `deploy/k8s/` and deploy **one replica** — the
+store is SQLite, so more than one writer is corruption, not scale. Apply with
+`kubectl apply -k deploy/k8s` after creating the namespace secret;
+`deploy/DEPLOYMENT_RUNBOOK.md` has the full sequence, including backup and
+restore.
+
 ## Try it
 
 Replay a learner's state from an event log, then check that a sealed quiz result cannot be edited through the store API. Run from the repository root.

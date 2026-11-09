@@ -1,0 +1,21 @@
+# kubectl apply -k deploy/k8s
+#
+# ingress.yaml is intentionally NOT listed: it carries a placeholder host and
+# would create a broken route if applied blindly. Edit it and apply it
+# separately once you have a real hostname and TLS issuer.
+#
+# The Secret is also not listed — secret.example.yaml is a template. Create
+# the real secret first (see DEPLOYMENT_RUNBOOK.md) or the pod will stay in
+# CreateContainerConfigError.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - pvc.yaml
+  - deployment.yaml
+  - service.yaml
+
+images:
+  - name: ghcr.io/hatemshalaby15071979/helix-core
+    newTag: "2.1.0"

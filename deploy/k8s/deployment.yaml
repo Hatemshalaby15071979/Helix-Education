@@ -1,59 +1,108 @@
+# helix_core runs as a SINGLE replica, on purpose.
+#
+# The store is SQLite in WAL mode: one writer, one file. Two pods on the same
+# volume is not a scaling knob, it is data corruption. `strategy: Recreate`
+# guarantees the old pod is gone before the new one attaches the volume.
+#
+# Scaling this out means replacing SqliteEventStore with a Postgres-backed
+# implementation of the same interface. That is a code change, not a manifest
+# change — see deploy/DEPLOYMENT_RUNBOOK.md, "Scaling beyond one replica".
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: helix-education-engine
-  namespace: helix-prime
+  name: helix-core
+  namespace: helix-education
   labels:
-    app: helix-education
-    component: lnd-engine
+    app.kubernetes.io/name: helix-core
+    app.kubernetes.io/part-of: helix-education
+    app.kubernetes.io/version: "2.1.0"
 spec:
-  replicas: 3
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 3
+  progressDeadlineSeconds: 300
   selector:
     matchLabels:
-      app: helix-education
+      app.kubernetes.io/name: helix-core
   template:
     metadata:
       labels:
-        app: helix-education
+        app.kubernetes.io/name: helix-core
+        app.kubernetes.io/part-of: helix-education
     spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
-      - name: education-api
-        image: helix/education-api:latest
-        ports:
-        - containerPort: 8000
-        env:
-        - name: HELIX_KMS_MASTER_KEY
-          valueFrom:
-            secretKeyRef:
-              name: helix-secrets
-              key: kms-master-key
-        - name: EVENT_STORE_PATH
-          value: "/data/events.jsonl"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        volumeMounts:
-        - name: event-store-volume
-          mountPath: /data
+        - name: helix-core
+          image: ghcr.io/hatemshalaby15071979/helix-core:2.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: HELIX_CORE_DB
+              value: /data/core.db
+            - name: HELIX_CORE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: helix-core-secrets
+                  key: token
+            - name: HELIX_CORE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: helix-core-secrets
+                  key: sealed-key-secret
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+          startupProbe:
+            httpGet:
+              path: /v1/health
+              port: http
+            periodSeconds: 2
+            failureThreshold: 30
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /v1/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /v1/health
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
       volumes:
-      - name: event-store-volume
-        persistentVolumeClaim:
-          claimName: helix-education-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: helix-education-service
-  namespace: helix-prime
-spec:
-  selector:
-    app: helix-education
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8000
-  type: ClusterIP
+        - name: data
+          persistentVolumeClaim:
+            claimName: helix-core-data
+        - name: tmp
+          emptyDir: {}

@@ -1,0 +1,38 @@
+# Optional. Only needed if the core must be reachable from outside the
+# cluster; the desktop app uses the sidecar, not this.
+#
+# Replace helix.example.com and the TLS secret name before applying. TLS is
+# expected to be issued by cert-manager (annotations below) or created
+# manually.
+#
+# The API is token-protected, but it is still an unauthenticated-by-network
+# service: do not expose it without TLS, and prefer a private ingress or a
+# VPN over a public one.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: helix-core
+  namespace: helix-education
+  labels:
+    app.kubernetes.io/name: helix-core
+    app.kubernetes.io/part-of: helix-education
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "1m"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - helix.example.com
+      secretName: helix-core-tls
+  rules:
+    - host: helix.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: helix-core
+                port:
+                  name: http

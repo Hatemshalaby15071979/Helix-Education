@@ -1,0 +1,7 @@
+# Keep the build context to the core package and nothing else.
+# Anything not listed here is excluded; add with care.
+
+*
+!helix_core/
+!Dockerfile
+!pyproject.toml

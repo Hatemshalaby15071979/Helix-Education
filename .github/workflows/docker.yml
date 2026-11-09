@@ -1,0 +1,141 @@
+name: Container image
+
+# Builds the helix_core image, smoke-tests it against /v1/health, and pushes
+# to GHCR on main and on version tags. Pull requests build and smoke-test but
+# never push.
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+    paths:
+      - "helix_core/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/docker.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "helix_core/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/docker.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: container-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/helix-core
+
+jobs:
+  build:
+    name: Build and smoke-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version from pyproject
+        id: ver
+        run: |
+          version=$(python3 -c "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $version"
+
+      - name: Build image
+        run: |
+          docker build \
+            --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
+            --label "org.opencontainers.image.version=${{ steps.ver.outputs.version }}" \
+            --label "org.opencontainers.image.revision=${{ github.sha }}" \
+            -t helix-core:ci .
+
+      - name: Smoke test — start the container and hit /v1/health
+        run: |
+          set -euo pipefail
+          docker run -d --name helix-core-smoke \
+            -p 127.0.0.1:18000:8000 \
+            -e HELIX_CORE_SECRET=ci-smoke-secret \
+            -e HELIX_CORE_TOKEN=ci-smoke-token \
+            helix-core:ci
+
+          ok=0
+          for i in $(seq 1 40); do
+            if body=$(curl -fsS http://127.0.0.1:18000/v1/health 2>/dev/null); then
+              echo "health: $body"
+              echo "$body" | grep -q '"status":"ok"' && ok=1 && break
+            fi
+            sleep 1
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo "::error::health endpoint never became ready"
+            docker logs helix-core-smoke || true
+            exit 1
+          fi
+
+          # End-to-end: register a quiz, answer it, read the score.
+          quiz=$(curl -fsS -X POST http://127.0.0.1:18000/v1/quizzes \
+            -H "Authorization: Bearer ci-smoke-token" \
+            -H "Content-Type: application/json" \
+            -d '{"topic":"ci","items":[{"question":"2+2?","options":["3","4"],"correct_index":1}]}')
+          echo "quiz: $quiz"
+          quiz_id=$(echo "$quiz" | python3 -c "import json,sys;print(json.load(sys.stdin)['quiz_id'])")
+          item_id=$(echo "$quiz" | python3 -c "import json,sys;print(json.load(sys.stdin)['items'][0]['item_id'])")
+
+          answer=$(curl -fsS -X POST "http://127.0.0.1:18000/v1/quizzes/$quiz_id/answers" \
+            -H "Authorization: Bearer ci-smoke-token" \
+            -H "Content-Type: application/json" \
+            -d "{\"item_id\":\"$item_id\",\"selected_index\":1}")
+          echo "answer: $answer"
+          echo "$answer" | grep -q '"correct":true'
+
+          score=$(curl -fsS "http://127.0.0.1:18000/v1/quizzes/$quiz_id/score" \
+            -H "Authorization: Bearer ci-smoke-token")
+          echo "score: $score"
+          echo "$score" | grep -q '"percentage":100'
+
+          # The registration response must never leak the key.
+          if echo "$quiz" | grep -q 'correct_index'; then
+            echo "::error::registration response leaked correct_index"
+            exit 1
+          fi
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker logs helix-core-smoke || true
+
+      - name: Stop smoke container
+        if: always()
+        run: docker rm -f helix-core-smoke || true
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Tag and push
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          docker tag helix-core:ci "$IMAGE:${{ github.sha }}"
+          docker tag helix-core:ci "$IMAGE:${{ steps.ver.outputs.version }}"
+          docker tag helix-core:ci "$IMAGE:latest"
+          docker push --all-tags "$IMAGE"
+
+      - name: Summary
+        run: |
+          {
+            echo "### helix_core image"
+            echo ""
+            echo "- version: \`${{ steps.ver.outputs.version }}\`"
+            echo "- commit: \`${{ github.sha }}\`"
+            if [ "${{ github.event_name }}" != "pull_request" ]; then
+              echo "- pushed: \`$IMAGE:${{ steps.ver.outputs.version }}\`, \`$IMAGE:${{ github.sha }}\`, \`$IMAGE:latest\`"
+            else
+              echo "- pushed: no (pull request build)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
