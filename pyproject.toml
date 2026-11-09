@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "helix-education"
-version = "2.0.0"
-description = "Event-sourced learning state engine with zero AI dependencies"
+version = "2.1.0"
+description = "Event-sourced learning engine with a SQLite core and sealed quiz scoring"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
@@ -25,19 +25,21 @@ dependencies = [
     "beautifulsoup4>=4.12",
     "cryptography>=42.0",
     "fastapi>=0.115",
+    "uvicorn>=0.30",
 ]
 
 [project.scripts]
 helix-learn = "helix_education.cli:main"
 helix-web = "helix_education.web_server:main"
 helix-web-v2 = "helix_education.web_server_v2:main"
+helix-core = "helix_core.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/<YOUR_GITHUB_ORG>/Helix-Education"
 Repository = "https://github.com/<YOUR_GITHUB_ORG>/Helix-Education"
 
 [tool.setuptools.packages.find]
-include = ["state_core*", "learning_service*", "content_engine*", "quiz_engine*", "progress_engine*", "delivery_engine*", "api_layer*", "helix_education*", "grounding_engine*", "observability*", "cognitive_agent*", "cognitive_engine*", "analytics_engine*"]
+include = ["helix_core*", "state_core*", "learning_service*", "content_engine*", "quiz_engine*", "progress_engine*", "delivery_engine*", "api_layer*", "helix_education*", "grounding_engine*", "observability*", "cognitive_agent*", "cognitive_engine*", "analytics_engine*"]
 
 [tool.ruff]
 line-length = 120
@@ -58,6 +60,7 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = [
+    "helix_core",
     "state_core",
     "learning_service",
     "content_engine",
@@ -71,7 +74,7 @@ known-first-party = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "helix_core/tests"]
 addopts = "-v --tb=short"
 markers = [
     "integration: marks tests that require live network access (skipped by default)",

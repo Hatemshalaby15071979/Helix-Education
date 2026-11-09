@@ -87,6 +87,37 @@ python -m pip install -e ".[dev]"
 python -m pytest -q
 ```
 
+## Core service (`helix_core`)
+
+`helix_core` is the extracted kernel: a SQLite-backed append-only event
+store, a sealed answer-key store, deterministic multiple-choice scoring,
+and a small HTTP API. Product shells call this instead of scoring quizzes
+themselves.
+
+```bash
+helix-core --port 8765              # loopback only
+HELIX_CORE_TOKEN=... helix-core     # require a bearer token
+```
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /v1/health` | liveness and event count |
+| `POST /v1/quizzes` | register a quiz; returns public items only |
+| `POST /v1/quizzes/{id}/answers` | score one answer |
+| `GET /v1/quizzes/{id}/score` | current score summary |
+| `GET /v1/topics/{topic}/state` | projection from `answer_scored` events |
+
+Registration never returns `correct_index` or `explanation`. Those live in
+a separate `sealed_keys` table and are verified with an HMAC before every
+score; a key edited on disk fails verification and the API returns 409
+instead of grading against the wrong answer.
+
+Build the wheel:
+
+```bash
+python -m build --wheel --outdir dist
+```
+
 ## Try it
 
 Replay a learner's state from an event log, then check that a sealed quiz result cannot be edited through the store API. Run from the repository root.
