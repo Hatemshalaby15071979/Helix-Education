@@ -30,15 +30,20 @@ concurrency:
   group: container-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/helix-core
-
 jobs:
   build:
     name: Build and smoke-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # GHCR rejects uppercase in a repository name, and the GitHub owner is
+      # "Hatemshalaby15071979". Lowercase it once, here.
+      - name: Resolve image name
+        id: meta
+        run: |
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "image=ghcr.io/${owner}/helix-core" >> "$GITHUB_OUTPUT"
 
       - name: Read version from pyproject
         id: ver
@@ -121,10 +126,10 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           set -euo pipefail
-          docker tag helix-core:ci "$IMAGE:${{ github.sha }}"
-          docker tag helix-core:ci "$IMAGE:${{ steps.ver.outputs.version }}"
-          docker tag helix-core:ci "$IMAGE:latest"
-          docker push --all-tags "$IMAGE"
+          docker tag helix-core:ci "${{ steps.meta.outputs.image }}:${{ github.sha }}"
+          docker tag helix-core:ci "${{ steps.meta.outputs.image }}:${{ steps.ver.outputs.version }}"
+          docker tag helix-core:ci "${{ steps.meta.outputs.image }}:latest"
+          docker push --all-tags "${{ steps.meta.outputs.image }}"
 
       - name: Summary
         run: |
@@ -134,7 +139,7 @@ jobs:
             echo "- version: \`${{ steps.ver.outputs.version }}\`"
             echo "- commit: \`${{ github.sha }}\`"
             if [ "${{ github.event_name }}" != "pull_request" ]; then
-              echo "- pushed: \`$IMAGE:${{ steps.ver.outputs.version }}\`, \`$IMAGE:${{ github.sha }}\`, \`$IMAGE:latest\`"
+              echo "- pushed: \`${{ steps.meta.outputs.image }}:${{ steps.ver.outputs.version }}\`, \`${{ steps.meta.outputs.image }}:${{ github.sha }}\`, \`${{ steps.meta.outputs.image }}:latest\`"
             else
               echo "- pushed: no (pull request build)"
             fi
