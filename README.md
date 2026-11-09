@@ -5,9 +5,9 @@
 
 <!-- badges:start -->
 
-[![CI](https://github.com/<YOUR_GITHUB_ORG>/Helix-Education/actions/workflows/Python%20application/badge.svg)](https://github.com/<YOUR_GITHUB_ORG>/Helix-Education/actions)
+[![CI](https://github.com/Hatemshalaby15071979/Helix-Education/actions/workflows/Python%20application/badge.svg)](https://github.com/Hatemshalaby15071979/Helix-Education/actions)
 ![licence](https://img.shields.io/badge/licence-MIT-blue)
-[![last commit](https://img.shields.io/github/last-commit/<YOUR_GITHUB_ORG>/Helix-Education)](https://github.com/<YOUR_GITHUB_ORG>/Helix-Education/commits/main)
+[![last commit](https://img.shields.io/github/last-commit/Hatemshalaby15071979/Helix-Education)](https://github.com/Hatemshalaby15071979/Helix-Education/commits/main)
 ![status](https://img.shields.io/badge/ci-success-brightgreen?label=success%20(2026-10-05))
 
 *Measured 2026-10-06 — CI **success**; head `2f6478c` (2026-10-05); Python.*
@@ -20,7 +20,7 @@
 **The event-sourced learning engine for Helix Codex.**
 
 ![Status](https://img.shields.io/badge/status-alpha-blue)
-[![CI](https://github.com/<YOUR_GITHUB_ORG>/Helix-Education/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/<YOUR_GITHUB_ORG>/Helix-Education/actions/runs/36807198469)
+[![CI](https://github.com/Hatemshalaby15071979/Helix-Education/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/Hatemshalaby15071979/Helix-Education/actions/runs/36807198469)
 ![Licence](https://img.shields.io/badge/licence-MIT-blue)
 ![Python](https://img.shields.io/badge/python-3.11%2B%20%E2%80%93%203.13-3776ab)
 
@@ -67,7 +67,7 @@ Stated plainly and dated. This section is last by design.
 
 | Item | State | Snapshot |
 |---|---|---|
-| Tests | 465 passed | 2026-10-01 — [run 36807198469](https://github.com/<YOUR_GITHUB_ORG>/Helix-Education/actions/runs/36807198469) at `4bd6c02` (latest code change; later commits are docs-only, see the live badge) |
+| Tests | 465 passed | 2026-10-01 — [run 36807198469](https://github.com/Hatemshalaby15071979/Helix-Education/actions/runs/36807198469) at `4bd6c02` (latest code change; later commits are docs-only, see the live badge) |
 | Core event-sourced learning state | Implemented | 2026-09-27 |
 | gRPC competency service | Business logic exists; bindings not generated, registration commented out, nothing mounts it | 2026-09-27 |
 | External grounding | A deterministic stub, a generic HTTP client, and a web-search client ship; the tests use the stub | 2026-09-27 |
@@ -79,7 +79,7 @@ Stated plainly and dated. This section is last by design.
 
 ## Run it
 
-Python 3.11–3.13 are covered by the `Python package` CI matrix ([run 36807198387](https://github.com/<YOUR_GITHUB_ORG>/Helix-Education/actions/runs/36807198387), 2026-10-01 — `465 passed` on 3.11, 3.12 and 3.13).
+Python 3.11–3.13 are covered by the `Python package` CI matrix ([run 36807198387](https://github.com/Hatemshalaby15071979/Helix-Education/actions/runs/36807198387), 2026-10-01 — `465 passed` on 3.11, 3.12 and 3.13).
 
 ```bash
 python -m pip install --upgrade pip
@@ -198,11 +198,11 @@ What "sealed" guarantees, stated exactly:
 
 ## Related work
 
-- [How this project fits the wider work](https://github.com/<YOUR_GITHUB_ORG>/<YOUR_GITHUB_ORG>)
+- [How this project fits the wider work](https://github.com/Hatemshalaby15071979/Hatemshalaby15071979)
 
 ## Author
 
-Built by Hatem Shalaby, Contact Centre Operations & AI Implementation Lead | WFM & CX Transformation. Background: https://github.com/<YOUR_GITHUB_ORG>
+Built by Hatem Shalaby, Contact Centre Operations & AI Implementation Lead | WFM & CX Transformation. Background: https://github.com/Hatemshalaby15071979
 
 ## Licence
 

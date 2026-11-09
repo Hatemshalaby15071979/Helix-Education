@@ -34,8 +34,8 @@ helix-web = "helix_education.web_server:main"
 helix-web-v2 = "helix_education.web_server_v2:main"
 
 [project.urls]
-Homepage = "https://github.com/<YOUR_GITHUB_ORG>/Helix-Education"
-Repository = "https://github.com/<YOUR_GITHUB_ORG>/Helix-Education"
+Homepage = "https://github.com/Hatemshalaby15071979/Helix-Education"
+Repository = "https://github.com/Hatemshalaby15071979/Helix-Education"
 
 [tool.setuptools.packages.find]
 # `helix_core` is its own distribution now (packages/helix-core) and is not
