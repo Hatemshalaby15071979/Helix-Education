@@ -94,7 +94,14 @@ store, a sealed answer-key store, deterministic multiple-choice scoring,
 and a small HTTP API. Product shells call this instead of scoring quizzes
 themselves.
 
+It is a **separate distribution**, `helix-core`, in `packages/helix-core/`.
+It depends on `fastapi`, `pydantic` and `uvicorn` and on nothing else — this
+package's heavier dependencies (`ollama`, `requests`, `beautifulsoup4`,
+`cryptography`) are not installed with it. The two wheels are siblings, not
+parent and child: nothing in `helix_education` imports `helix_core`.
+
 ```bash
+pip install helix-core
 helix-core --port 8765              # loopback only
 HELIX_CORE_TOKEN=... helix-core     # require a bearer token
 ```
@@ -112,11 +119,17 @@ a separate `sealed_keys` table and are verified with an HMAC before every
 score; a key edited on disk fails verification and the API returns 409
 instead of grading against the wrong answer.
 
-Build the wheel:
+Build the wheels — one per distribution:
 
 ```bash
-python -m build --wheel --outdir dist
+python -m build --wheel --outdir dist packages/helix-core   # helix_core-2.1.0-*.whl
+python -m build --wheel --outdir dist .                     # helix_education-2.1.0-*.whl
+python scripts/verify_distributions.py                      # asserts the split holds
 ```
+
+`scripts/verify_distributions.py` is what stops the two from quietly drifting
+back together: it fails if the core wheel grows a fourth dependency, if the
+parent wheel still contains `helix_core/`, or if either ships bytecode.
 
 ### Container image
 

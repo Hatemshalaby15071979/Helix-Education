@@ -221,7 +221,7 @@ three releases.
 
 **Schema changes are not covered by `rollout undo`.** If a new version changes
 the SQLite schema, rolling the image back does not roll the data back. Take a
-backup (§7.2) before any upgrade that touches `helix_core/store.py`.
+backup (§7.2) before any upgrade that touches `packages/helix-core/helix_core/store.py`.
 
 ---
 
@@ -282,7 +282,7 @@ Do not raise `replicas`. Two pods on one `ReadWriteOnce` volume will not both
 start; two pods on a `ReadWriteMany` volume will corrupt the database.
 
 The store is behind a narrow interface (`SqliteEventStore` in
-`helix_core/store.py`), so the real path is:
+`packages/helix-core/helix_core/store.py`), so the real path is:
 
 1. Implement `PostgresEventStore` with the same methods (`append`,
    `read_all`, `read_since`, `count_events`, `transaction`).

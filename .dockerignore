@@ -1,7 +1,9 @@
 # Keep the build context to the core package and nothing else.
-# Anything not listed here is excluded; add with care.
+# Every parent of a negated path must itself be negated, or Docker never
+# descends into it.
 
 *
-!helix_core/
 !Dockerfile
-!pyproject.toml
+!packages
+!packages/helix-core
+!packages/helix-core/helix_core

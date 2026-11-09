@@ -9,14 +9,14 @@ on:
     branches: ["main"]
     tags: ["v*"]
     paths:
-      - "helix_core/**"
+      - "packages/helix-core/**"
       - "Dockerfile"
       - ".dockerignore"
       - ".github/workflows/docker.yml"
   pull_request:
     branches: ["main"]
     paths:
-      - "helix_core/**"
+      - "packages/helix-core/**"
       - "Dockerfile"
       - ".dockerignore"
       - ".github/workflows/docker.yml"

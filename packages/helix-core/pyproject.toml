@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "helix-core"
+version = "2.1.0"
+description = "Sealed quiz scoring and an append-only event store over SQLite"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+keywords = ["education", "quiz", "scoring", "event-sourcing", "sqlite"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Education",
+]
+
+# The point of the split: these three, and nothing else. The parent package
+# pulls in ollama, requests, beautifulsoup4 and cryptography; the core does
+# not use any of them.
+dependencies = [
+    "fastapi>=0.115",
+    "pydantic>=2.0",
+    "uvicorn>=0.30",
+]
+
+[project.scripts]
+helix-core = "helix_core.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/Hatemshalaby15071979/Helix-Education/tree/main/packages/helix-core"
+Repository = "https://github.com/Hatemshalaby15071979/Helix-Education"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+[tool.setuptools.packages.find]
+include = ["helix_core*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --tb=short"
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E501", "E741"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["helix_core"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "build", "dist"]
+skips = []

@@ -7,7 +7,8 @@
 # library plus FastAPI, Pydantic and Uvicorn, so the image stays small and
 # does not drag in the Ollama client or the HTML scraper.
 #
-# Once `helix_core` ships as its own distribution this becomes:
+# `helix_core` is its own distribution (packages/helix-core). Once it is on
+# PyPI this becomes:
 #   RUN pip install --no-cache-dir "helix-core==2.1.0"
 # and the COPY line goes away.
 
@@ -31,7 +32,7 @@ RUN pip install --no-cache-dir \
         "uvicorn>=0.30" \
         "pydantic>=2.0"
 
-COPY --chown=root:root helix_core ./helix_core
+COPY --chown=root:root packages/helix-core/helix_core ./helix_core
 
 # The SQLite database lives on a mounted volume; /data must exist and be
 # writable by the runtime user even before the volume is attached.
