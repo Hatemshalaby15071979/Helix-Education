@@ -1,0 +1,13 @@
+{
+  "name": "Helix Education",
+  "repo": "Hatemshalaby15071979/Helix-Education",
+  "status_template": "**Version @DOCS_SYNC_VERSION@ — released @DOCS_SYNC_DATE@.** Two distributions ship from this repository: `helix-education` (the engine) and `helix-core` (the sealed scoring service, also published as a PyPI wheel and a GHCR container image). The CI badge at the top is the live build status.",
+  "status_template_html": "<p class=\"status\"><strong>Version @DOCS_SYNC_VERSION@ — released @DOCS_SYNC_DATE@.</strong> An early (alpha) release. @DOCS_SYNC_TESTS@ automated tests pass on Python 3.11, 3.12 and 3.13, and @DOCS_SYNC_CI@. Learning state is stored locally; the core needs no cloud and no account.</p>",
+  "facts": {
+    "version": "2.1.1",
+    "release_date": "10 November 2026",
+    "tests_passed": 465,
+    "coverage": 51.55,
+    "ci_label": "all CI checks are green"
+  }
+}

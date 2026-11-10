@@ -5,7 +5,7 @@
 [![CI](https://github.com/Hatemshalaby15071979/Helix-Education/actions/workflows/Python%20application/badge.svg)](https://github.com/Hatemshalaby15071979/Helix-Education/actions)
 ![licence](https://img.shields.io/badge/licence-MIT-blue)
 ![python](https://img.shields.io/badge/python-3.11%2B%20%E2%80%93%203.13-3776ab)
-![status](https://img.shields.io/badge/status-v2.1.1%20released-brightgreen)
+![status](https://img.shields.io/badge/status-2.1.1%20released-brightgreen)
 
 **A learning engine that keeps a learner's record as evidence — replayable, inspectable, and sealed so a score can't be quietly changed.**
 
@@ -70,10 +70,9 @@ HELIX_CORE_TOKEN=... helix-core   # require a bearer token
 
 ## Status
 
-**Version 2.1.1 — released 10 November 2026.** Two distributions ship from this
-repository: `helix-education` (the engine) and `helix-core` (the sealed scoring
-service, also published as a PyPI wheel and a GHCR container image). The CI badge at
-the top is the live build status.
+<!-- docs-sync:start -->
+**Version 2.1.1 — released 10 November 2026.** Two distributions ship from this repository: `helix-education` (the engine) and `helix-core` (the sealed scoring service, also published as a PyPI wheel and a GHCR container image). The CI badge at the top is the live build status.
+<!-- docs-sync:end -->
 
 ## For developers
 
