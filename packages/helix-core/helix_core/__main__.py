@@ -9,6 +9,7 @@ import secrets
 import socket
 
 from .api import create_app
+from .lifetime import watch_parent_death
 from .service import LearningCore
 from .store import default_db_path
 
@@ -85,6 +86,11 @@ def main(argv: list[str] | None = None) -> int:
     if not args.handshake:
         uvicorn.run(app, host=args.host, port=args.port, log_level="info")
         return 0
+
+    # The frozen sidecar is a bootloader plus a worker. The worker must not
+    # outlive the shell that spawned it, or it keeps the port, the database
+    # and the token alive after the app that owns them has gone.
+    watch_parent_death()
 
     sock = bind_socket(args.host, args.port)
     bound_port = sock.getsockname()[1]
