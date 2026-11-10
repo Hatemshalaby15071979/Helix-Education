@@ -12,7 +12,7 @@ Two distributions ship from this repository and are versioned together:
 - **`helix-education`** (the repository root) — the wider learning engine:
   content generation, adaptive paths, projections and the API layer.
 
-## [2.1.1] - Unreleased
+## [2.1.1] - 2026-11-10
 
 ### Fixed
 - **The frozen sidecar outlived the shell that spawned it.** A PyInstaller
