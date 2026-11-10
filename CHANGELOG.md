@@ -84,7 +84,7 @@ Two distributions ship from this repository and are versioned together:
   engine, with a replayable append-only event log, citation-grounded
   content generation, and sealed quiz scoring.
 
-[Unreleased]: https://github.com/Hatemshalaby15071979/Helix-Education/compare/v2.1.0...HEAD
+[2.1.1]: https://github.com/Hatemshalaby15071979/Helix-Education/compare/v2.1.0...HEAD
 [2.1.0]: https://github.com/Hatemshalaby15071979/Helix-Education/compare/v1.1.0...v2.1.0
 [1.1.0]: https://github.com/Hatemshalaby15071979/Helix-Education/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Hatemshalaby15071979/Helix-Education/releases/tag/v1.0.0
