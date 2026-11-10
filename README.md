@@ -122,8 +122,8 @@ instead of grading against the wrong answer.
 Build the wheels — one per distribution:
 
 ```bash
-python -m build --wheel --outdir dist packages/helix-core   # helix_core-2.1.0-*.whl
-python -m build --wheel --outdir dist .                     # helix_education-2.1.0-*.whl
+python -m build --wheel --outdir dist packages/helix-core   # helix_core-2.1.1-*.whl
+python -m build --wheel --outdir dist .                     # helix_education-2.1.1-*.whl
 python scripts/verify_distributions.py                      # asserts the split holds
 ```
 
@@ -131,21 +131,32 @@ python scripts/verify_distributions.py                      # asserts the split 
 back together: it fails if the core wheel grows a fourth dependency, if the
 parent wheel still contains `helix_core/`, or if either ships bytecode.
 
+`scripts/check_release.py` is what stops the version from drifting: it fails
+if the two packages, the CHANGELOG and the git tags do not describe the same
+release.
+
 ### Container image
 
 The core also ships as a container. The image contains `helix_core/` only —
 no Ollama client, no scraper.
 
 ```bash
-docker build -t helix-core:2.1.0 .
+docker build -t helix-core:2.1.1 .
 docker run --rm -p 127.0.0.1:8765:8000 \
   -e HELIX_CORE_SECRET=dev-secret -e HELIX_CORE_TOKEN=dev-token \
-  helix-core:2.1.0
+  helix-core:2.1.1
 ```
 
 `.github/workflows/docker.yml` builds it, runs a register/answer/score smoke
-test against `/v1/health`, and pushes `ghcr.io/<owner>/helix-core:{2.1.0,<sha>,latest}`
-on `main` and `v*` tags.
+test against `/v1/health`, and pushes
+`ghcr.io/<owner>/helix-core:{2.1.1,<sha>,latest}` **on version tags only**.
+A push to `main` builds and smoke-tests the image but does not publish it:
+an image published from a branch push is one nobody declared as a release.
+
+`.github/workflows/publish-pypi.yml` publishes the wheels to PyPI, and is
+gated the same way — it runs for a `v*` tag, and the upload step also
+requires the `PYPI_API_TOKEN` secret to be present. Without the token the
+wheels are still built and checked, and nothing is uploaded.
 
 Kubernetes manifests live in `deploy/k8s/` and deploy **one replica** — the
 store is SQLite, so more than one writer is corruption, not scale. Apply with

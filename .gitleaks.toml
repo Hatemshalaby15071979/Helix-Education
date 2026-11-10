@@ -1,0 +1,59 @@
+# Gitleaks configuration for Helix-Education.
+#
+# The default rule set is used unchanged. This file only adds an
+# allowlist, and every entry in it is a finding that is NOT a secret.
+#
+# The rule is simple: an allowlist entry must name a specific file, a
+# specific pattern, and say why the pattern cannot be a live credential.
+# Nothing that could be a credential is allowlisted, and no entry
+# disables a rule for a whole file.
+
+title = "Helix-Education gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = """
+An example token in the helix-core README, truncated with an ellipsis.
+
+`vDzm6IrvQNgl-...` is a documentation placeholder showing the shape of
+the handshake line. The trailing dots are part of the text: it cannot be
+a credential because it is not a complete value.
+"""
+paths = ['''packages/helix-core/README\.md''']
+regexes = ['''vDzm6IrvQNgl-\.\.\.''']
+
+[[allowlists]]
+description = """
+The .env.example template, whose values are empty.
+
+`HELIX_GROUNDING_API_KEY=` has no value after the `=`, so there is no
+credential in the file. The rule matches the variable NAME, which is why
+it fires on a template that contains no secret at all.
+"""
+paths = ['''^\.env\.example$''']
+regexes = ['''HELIX_GROUNDING_API_KEY=''']
+
+[[allowlists]]
+description = """
+The literal `ci-smoke-token` in the container smoke test.
+
+This is a fixed test string in docker.yml, passed to a container that
+starts and is destroyed inside the job. It authenticates nothing outside
+that container and is not a credential.
+"""
+paths = ['''^\.github/workflows/docker\.yml$''']
+regexes = ['''ci-smoke-token''']
+
+[[allowlists]]
+description = """
+SHA-256 answer-key hashes in the recorded event logs.
+
+`answer_key_hash` holds a one-way digest of an answer key, not the key.
+A digest cannot be used to answer a question; that is the property the
+sealed key store depends on. The rule matches the 64-hex-character shape,
+which is a hash.
+"""
+paths = ['''^wiki/(helix|test)_events\.jsonl$''']
+regexes = ['''answer_key_hash["']?\s*[:=]\s*["']?[0-9a-f]{64}''']

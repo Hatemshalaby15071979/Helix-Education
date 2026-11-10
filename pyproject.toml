@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "helix-education"
-version = "2.1.0"
+version = "2.1.1"
 description = "Event-sourced learning engine with a SQLite core and sealed quiz scoring"
 readme = "README.md"
 license = "MIT"
@@ -88,6 +88,49 @@ markers = [
     "security: marks security-oriented tests",
 ]
 
+# Coverage floor.
+#
+# The suite had 465 passing tests and no coverage floor, so coverage could
+# fall for a long time without anything going red. This is the floor that
+# makes the next silent regression loud.
+#
+# The number was measured before it was set: 53% on Python 3.11, 3.12 and
+# 3.13 (the versions CI runs), and 51% on 3.14. The floor is 51, so the
+# gate is green by construction on every interpreter measured — including
+# the one a developer is most likely to run locally.
+#
+# It may be raised. It may never be lowered after a result is seen.
+[tool.coverage.report]
+fail_under = 51
+show_missing = true
+skip_covered = false
+exclude_also = [
+    # A `__main__` guard is not a branch worth covering.
+    "if __name__ == .__main__.:",
+    # Type-only and protocol declarations.
+    "@abstractmethod",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+
+[tool.coverage.run]
+branch = false
+source = [
+    "state_core",
+    "learning_service",
+    "content_engine",
+    "quiz_engine",
+    "progress_engine",
+    "delivery_engine",
+    "api_layer",
+    "helix_education",
+    "grounding_engine",
+    "observability",
+    "cognitive_agent",
+    "cognitive_engine",
+    "analytics_engine",
+]
+
 [tool.bandit]
 exclude_dirs = ["./build", "./dist", "./.venv", "./helix_education.egg-info", "./tests", "./packages/helix-core/tests", "./packages/helix-core/build"]
 skips = []
@@ -95,9 +138,10 @@ skips = []
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    "pytest-cov>=5.0",
     "ruff>=0.4",
     "pandas>=2.0",
 ]
 
 [dependency-groups]
-dev = ["pytest>=8.0", "ruff>=0.4"]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.4"]

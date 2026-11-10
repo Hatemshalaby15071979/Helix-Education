@@ -1,7 +1,7 @@
 # Helix Core — Deployment Runbook
 
 **Component:** `helix_core` (the quiz registration / sealed scoring service)
-**Version:** 2.1.0
+**Version:** 2.1.1
 **Last updated:** 2026-11-09
 **Shape:** one container, one replica, one SQLite file on one volume.
 
@@ -34,7 +34,7 @@ distribution.
 - `kubectl` pointed at that cluster.
 - Docker (or Podman) to build the image locally.
 - A GHCR package you can pull. The manifests reference
-  `ghcr.io/hatemshalaby15071979/helix-core:2.1.0`; change the owner in
+  `ghcr.io/hatemshalaby15071979/helix-core:2.1.1`; change the owner in
   `deployment.yaml` and `kustomization.yaml` if you fork.
 - If the package is private, an image pull secret in `helix-education`:
 
@@ -55,20 +55,20 @@ The image is built and pushed by `.github/workflows/docker.yml` on every push
 to `main` and on `v*` tags. To build locally:
 
 ```bash
-docker build -t helix-core:2.1.0 .
+docker build -t helix-core:2.1.1 .
 docker run --rm -p 127.0.0.1:8765:8000 \
   -e HELIX_CORE_SECRET=dev-secret \
   -e HELIX_CORE_TOKEN=dev-token \
-  helix-core:2.1.0
+  helix-core:2.1.1
 curl -s http://127.0.0.1:8765/v1/health
-# {"status":"ok","version":"2.1.0","events":0}
+# {"status":"ok","version":"2.1.1","events":0}
 ```
 
 To push manually:
 
 ```bash
-docker tag helix-core:2.1.0 ghcr.io/<owner>/helix-core:2.1.0
-docker push ghcr.io/<owner>/helix-core:2.1.0
+docker tag helix-core:2.1.1 ghcr.io/<owner>/helix-core:2.1.1
+docker push ghcr.io/<owner>/helix-core:2.1.1
 ```
 
 ---
@@ -140,7 +140,7 @@ Expected: one pod, `1/1 Running`, no restarts after the first minute.
 ```bash
 kubectl -n helix-education port-forward svc/helix-core 8080:80 &
 curl -s http://127.0.0.1:8080/v1/health
-# {"status":"ok","version":"2.1.0","events":<n>}
+# {"status":"ok","version":"2.1.1","events":<n>}
 ```
 
 `/v1/health` is unauthenticated on purpose — it is the probe target and it

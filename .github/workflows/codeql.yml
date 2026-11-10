@@ -1,0 +1,52 @@
+# CodeQL analysis.
+#
+# The Python code is analysed without a build step: CodeQL's Python
+# extractor reads the source directly.
+
+name: CodeQL
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  # So the analysis can be run on demand — before a change reaches main,
+  # or to re-run it without waiting for the next push.
+  workflow_dispatch:
+  schedule:
+    # Weekly, because a vulnerability disclosed against a dependency
+    # shipped yesterday is not found by scanning yesterday's code.
+    - cron: "23 5 * * 1"
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: analyze (python)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          build-mode: none
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:python"

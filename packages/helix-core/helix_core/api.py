@@ -92,7 +92,7 @@ class HealthOut(BaseModel):
     events: int
 
 
-def create_app(core: LearningCore, *, version: str = "2.1.0") -> FastAPI:
+def create_app(core: LearningCore, *, version: str = "2.1.1") -> FastAPI:
     """Build the FastAPI application around a `LearningCore`."""
     app = FastAPI(title="Helix Core", version=version, docs_url="/docs", redoc_url=None)
 

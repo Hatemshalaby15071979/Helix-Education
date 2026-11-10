@@ -1,0 +1,18 @@
+# Who reviews what.
+#
+# The default owner is the repository owner. These are the paths where a
+# second pair of eyes matters most, because a change there can ship
+# something broken without any test failing.
+#
+# The last matching pattern wins, so the specific paths come first and
+# the catch-all comes last.
+
+# The core itself: the sealed key store, the scoring, the HTTP API, and
+# the handshake the desktop shell parses.
+/packages/helix-core/helix_core/  @Hatemshalaby15071979
+/packages/helix-core/tests/        @Hatemshalaby15071979
+
+# The release gates and the publish workflows.
+/.github/workflows/                 @Hatemshalaby15071979
+/.github/dependabot.yml            @Hatemshalaby15071979
+/.gitleaks.toml                    @Hatemshalaby15071979
