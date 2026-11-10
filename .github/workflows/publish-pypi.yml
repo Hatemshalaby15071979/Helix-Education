@@ -81,13 +81,19 @@ jobs:
           fi
           echo "enabled=true" >> "$GITHUB_OUTPUT"
 
+      # BOTH gates must be open: a version tag, and the token.
+      #
+      # The tag condition is not implied by the token check. The workflow
+      # also runs on `release: published` and on a manual dispatch, and
+      # neither of those is a version tag on the ref — so without this
+      # condition a manual run on a branch would upload to a public index.
       - name: Upload the wheels to PyPI
-        if: steps.gate.outputs.enabled == 'true'
+        if: startsWith(github.ref, 'refs/tags/v') && steps.gate.outputs.enabled == 'true'
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: python -m twine upload dist/*.whl
 
       - name: Report that nothing was published
-        if: steps.gate.outputs.enabled != 'true'
+        if: steps.gate.outputs.enabled != 'true' || !startsWith(github.ref, 'refs/tags/v')
         run: echo "::notice::No upload was attempted. Set the PYPI_API_TOKEN secret to enable publishing."

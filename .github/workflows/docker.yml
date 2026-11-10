@@ -31,7 +31,11 @@ on:
 
 permissions:
   contents: read
-  packages: write
+  # packages: write is granted per-job below, only to the job that can
+  # actually publish, and only when the publish token is present. A
+  # workflow-wide grant would give every job in this file — including the
+  # ones that merely build and smoke-test — the ability to push an image.
+  packages: read
 
 concurrency:
   group: container-${{ github.ref }}
@@ -41,6 +45,9 @@ jobs:
   build:
     name: Build and smoke-test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v4
 
@@ -125,20 +132,56 @@ jobs:
         if: always()
         run: docker rm -f helix-core-smoke || true
 
-      # Publishing is tag-gated: only a version tag publishes an image.
-      # A branch push builds and smoke-tests the image and stops here.
+      # Publishing is tag-gated AND credential-gated.
+      #
+      # Two independent gates, both of which must be open before an image
+      # reaches GHCR:
+      #
+      #   1. The workflow only publishes for a `v*` tag. A branch push
+      #      never publishes anything.
+      #   2. The publish steps require the GHCR_PUBLISH_TOKEN secret to
+      #      be present. Without it the image is still built and
+      #      smoke-tested, and nothing is pushed.
+      #
+      # The second gate exists because the first is not enough on its own:
+      # a tag can be pushed by anyone with write access, and an image
+      # published from a tag nobody intended to release is still a
+      # published image. The token is the deliberate act.
+      #
+      # Without the token this job exits successfully with a message
+      # instead of failing: a repository without a publish token is a
+      # normal state, not an error.
+      - name: Check that publishing is enabled
+        id: publish
+        env:
+          GHCR_PUBLISH_TOKEN: ${{ secrets.GHCR_PUBLISH_TOKEN }}
+        run: |
+          if [ -z "$GHCR_PUBLISH_TOKEN" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::GHCR_PUBLISH_TOKEN is not set. The image was built and smoke-tested, but nothing was published."
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      # BOTH gates must be open: a version tag, and the token. The tag
+      # condition is not implied by the token check — a token present on a
+      # branch push must still not publish.
       - name: Log in to GHCR
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+        if: startsWith(github.ref, 'refs/tags/v') && steps.publish.outputs.enabled == 'true'
+        run: echo "${{ secrets.GHCR_PUBLISH_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: Tag and push
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && steps.publish.outputs.enabled == 'true'
         run: |
           set -euo pipefail
           docker tag helix-core:ci "${{ steps.meta.outputs.image }}:${{ github.sha }}"
           docker tag helix-core:ci "${{ steps.meta.outputs.image }}:${{ steps.ver.outputs.version }}"
           docker tag helix-core:ci "${{ steps.meta.outputs.image }}:latest"
           docker push --all-tags "${{ steps.meta.outputs.image }}"
+
+      - name: Report that nothing was published
+        if: steps.publish.outputs.enabled != 'true' || !startsWith(github.ref, 'refs/tags/v')
+        run: echo "::notice::No image was pushed. Set the GHCR_PUBLISH_TOKEN secret to enable publishing."
 
       - name: Summary
         run: |
@@ -147,9 +190,9 @@ jobs:
             echo ""
             echo "- version: \`${{ steps.ver.outputs.version }}\`"
             echo "- commit: \`${{ github.sha }}\`"
-            if [ "${{ github.ref }}" != "refs/heads/main" ] && [ "${{ github.event_name }}" != "pull_request" ]; then
+            if [ "${{ steps.publish.outputs.enabled }}" = "true" ]; then
               echo "- pushed: \`${{ steps.meta.outputs.image }}:${{ steps.ver.outputs.version }}\`, \`${{ steps.meta.outputs.image }}:${{ github.sha }}\`, \`${{ steps.meta.outputs.image }}:latest\`"
             else
-              echo "- pushed: no (not a version tag)"
+              echo "- pushed: no (publishing is not enabled)"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
