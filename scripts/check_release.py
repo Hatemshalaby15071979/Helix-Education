@@ -131,6 +131,13 @@ def main() -> int:
 
     for version, released in sections:
         if not released:
+            # An unreleased section must not have a tag yet: the tag is
+            # created when the release is cut.
+            if version in tagged_versions:
+                problems.append(
+                    f"the CHANGELOG records {version} as unreleased, but there is a v{version} tag. "
+                    "Either the release was cut — mark it released — or the tag was made by mistake."
+                )
             continue
         if version in tagged_versions or version in UNTAGGED_RELEASES:
             continue
@@ -153,8 +160,11 @@ def main() -> int:
     # ── the report ───────────────────────────────────────────────────────
     print(f"  root package      {ROOT_VERSION}")
     print(f"  helix-core        {CORE_VERSION}")
-    print(f"  changelog top     {top}{'' if top_released else ' (unreleased)'}")
+    print(f"  changelog top     {top}{'' if top_released else ' (unreleased — no tag yet)'}")
     print(f"  tags              {', '.join(tags) or '(none)'}")
+
+    if not top_released:
+        print(f"                    the {top} tag is created when the release is cut: git tag v{top}")
 
     for tag, why in LEGACY_TAGS.items():
         if tag in tags:
