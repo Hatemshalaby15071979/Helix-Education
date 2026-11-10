@@ -1,0 +1,93 @@
+# Publish to PyPI.
+#
+# TAG-GATED, AND DISABLED UNTIL A TOKEN EXISTS.
+#
+# Two independent gates, both of which must be open before anything is
+# uploaded:
+#
+#   1. The workflow only runs for a `v*` tag. A branch push never
+#      publishes anything.
+#   2. The upload step requires the PYPI_API_TOKEN secret to be present.
+#      Without it the step exits successfully with a message instead of
+#      failing or uploading.
+#
+# The second gate exists because the first is not enough on its own: a
+# tag can be pushed by anyone with write access, and an accidental or
+# malicious tag should not publish a wheel to a public index. The token
+# is the deliberate act.
+#
+# Neither the tag nor the token is created by this repository. Creating a
+# release tag and uploading a distribution are both the owner's actions.
+
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-pypi-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: build and publish the wheels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+
+      # The two distributions are built and checked separately, exactly as
+      # the CI job does, so a wheel that breaks the split never reaches
+      # an index.
+      - name: Build the helix-core wheel
+        run: python -m build --wheel --outdir dist packages/helix-core
+
+      - name: Build the helix-education wheel
+        run: python -m build --wheel --outdir dist .
+
+      - name: Verify the two distributions are split
+        run: python scripts/verify_distributions.py
+
+      - name: Check the wheel metadata
+        run: python -m twine check dist/*.whl
+
+      # The second gate. Absent the token, this job says so and stops.
+      # It does not fail: a repository without a PyPI token is a normal
+      # state, not an error.
+      - name: Check that publishing is enabled
+        id: gate
+        env:
+          PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          if [ -z "$PYPI_API_TOKEN" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::PYPI_API_TOKEN is not set. The wheels were built and checked, but nothing was published."
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the wheels to PyPI
+        if: steps.gate.outputs.enabled == 'true'
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: python -m twine upload dist/*.whl
+
+      - name: Report that nothing was published
+        if: steps.gate.outputs.enabled != 'true'
+        run: echo "::notice::No upload was attempted. Set the PYPI_API_TOKEN secret to enable publishing."

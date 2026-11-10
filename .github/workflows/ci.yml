@@ -38,6 +38,27 @@ jobs:
       - name: Lint (ruff)
         run: ruff check .
 
+      # The version in the manifests, the CHANGELOG and the git tags must
+      # describe the same release.
+      - name: Release metadata agrees
+        run: python scripts/check_release.py
+
+      # The advisory pass over the rules this repository's ruff configuration
+      # deliberately ignores (F401 unused imports, F811 redefinition, F821
+      # undefined name, F841 unused variable).
+      #
+      # It was carried by the two duplicate workflows this file replaces, and
+      # it is worth keeping: ruff is configured to ignore these rules, so
+      # without this step nothing looks at them. The F821 findings are real
+      # undefined names in modules that import their dependencies lazily.
+      #
+      # Advisory means advisory: it reports and does not fail the build.
+      # Turning it into a gate would fail on findings that predate it, which
+      # is a separate decision, not a side effect of tidying the workflows.
+      - name: Advisory lint (unused and undefined names)
+        continue-on-error: true
+        run: ruff check --select F401,F811,F821,F841 --output-format concise .
+
       - name: Compile check (compileall)
         run: python -m compileall -q .
 
@@ -47,6 +68,35 @@ jobs:
       - name: Tests (helix-core)
         working-directory: packages/helix-core
         run: pytest -q
+
+  coverage:
+    name: coverage floor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package and dev tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e packages/helix-core
+          pip install -e ".[dev]"
+          pip install pytest-cov
+
+      # The floor lives in pyproject.toml ([tool.coverage.report]
+      # fail_under). This step measures and enforces it.
+      #
+      # It runs on ONE interpreter rather than the whole matrix: the floor
+      # is a single number, and measuring it on three versions would give
+      # three numbers and no single thing to compare against. The floor was
+      # measured on 3.11, 3.12 and 3.13 before it was set, and set below
+      # the lowest of them so it is green by construction.
+      - name: Coverage floor
+        run: pytest -q --cov --cov-report=term
 
   security:
     name: security (bandit)

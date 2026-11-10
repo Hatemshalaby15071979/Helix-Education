@@ -1,8 +1,15 @@
 name: Container image
 
 # Builds the helix_core image, smoke-tests it against /v1/health, and pushes
-# to GHCR on main and on version tags. Pull requests build and smoke-test but
-# never push.
+# to GHCR on version tags.
+#
+# PUSHING IS TAG-GATED. A push to `main` builds and smoke-tests the image
+# but does NOT publish it. The reason is that an image published from a
+# branch push is an image nobody declared as a release: it has a `latest`
+# tag that consumers pull, and it is replaced by whatever the next push
+# produced. A release is a version tag, so only a version tag publishes.
+#
+# Pull requests build and smoke-test but never push, as before.
 
 on:
   push:
@@ -118,12 +125,14 @@ jobs:
         if: always()
         run: docker rm -f helix-core-smoke || true
 
+      # Publishing is tag-gated: only a version tag publishes an image.
+      # A branch push builds and smoke-tests the image and stops here.
       - name: Log in to GHCR
-        if: github.event_name != 'pull_request'
+        if: startsWith(github.ref, 'refs/tags/v')
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: Tag and push
-        if: github.event_name != 'pull_request'
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           set -euo pipefail
           docker tag helix-core:ci "${{ steps.meta.outputs.image }}:${{ github.sha }}"
@@ -138,9 +147,9 @@ jobs:
             echo ""
             echo "- version: \`${{ steps.ver.outputs.version }}\`"
             echo "- commit: \`${{ github.sha }}\`"
-            if [ "${{ github.event_name }}" != "pull_request" ]; then
+            if [ "${{ github.ref }}" != "refs/heads/main" ] && [ "${{ github.event_name }}" != "pull_request" ]; then
               echo "- pushed: \`${{ steps.meta.outputs.image }}:${{ steps.ver.outputs.version }}\`, \`${{ steps.meta.outputs.image }}:${{ github.sha }}\`, \`${{ steps.meta.outputs.image }}:latest\`"
             else
-              echo "- pushed: no (pull request build)"
+              echo "- pushed: no (not a version tag)"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
