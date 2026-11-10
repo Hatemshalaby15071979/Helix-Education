@@ -2,58 +2,90 @@
 
 # Helix Education
 
-
-<!-- badges:start -->
-
 [![CI](https://github.com/Hatemshalaby15071979/Helix-Education/actions/workflows/Python%20application/badge.svg)](https://github.com/Hatemshalaby15071979/Helix-Education/actions)
 ![licence](https://img.shields.io/badge/licence-MIT-blue)
-[![last commit](https://img.shields.io/github/last-commit/Hatemshalaby15071979/Helix-Education)](https://github.com/Hatemshalaby15071979/Helix-Education/commits/main)
-![status](https://img.shields.io/badge/ci-success-brightgreen?label=success%20(2026-10-05))
+![python](https://img.shields.io/badge/python-3.11%2B%20%E2%80%93%203.13-3776ab)
+![status](https://img.shields.io/badge/status-v2.1.1%20released-brightgreen)
 
-*Measured 2026-10-06 — CI **success**; head `2f6478c` (2026-10-05); Python.*
-
-<!-- No static test or coverage count is shown here: a frozen
-     number decays silently. Run the suite for a current figure;
-     the CI badge above is the live status. -->
-<!-- badges:end -->
-
-**The event-sourced learning engine for Helix Codex.**
-
-![Status](https://img.shields.io/badge/status-alpha-blue)
-[![CI](https://github.com/Hatemshalaby15071979/Helix-Education/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/Hatemshalaby15071979/Helix-Education/actions/runs/36807198469)
-![Licence](https://img.shields.io/badge/licence-MIT-blue)
-![Python](https://img.shields.io/badge/python-3.11%2B%20%E2%80%93%203.13-3776ab)
+**A learning engine that keeps a learner's record as evidence — replayable, inspectable, and sealed so a score can't be quietly changed.**
 
 </div>
 
-## One-line identity
+## What it is
 
-Helix Education is the event-sourced learning engine for Helix Codex — it turns
-operational knowledge into structured, auditable learning that a learner can replay
-and check, not just consume.
+Helix Education is a learning engine. It records what a person learns as a chain of
+events, rebuilds their progress from that chain, and scores quizzes in a way that
+cannot be silently edited afterwards. The core has **no AI dependency**, so a lesson
+or a scored quiz works without a model in the loop.
 
-> [!NOTE]
-> **Operating principle.** Learning records are evidence, not suggestions. Learner state is reconstructed from an append-only event log, so any claim about a person's progress can be replayed and verified rather than taken on trust. The core engine has no AI dependency, so a lesson or a scored quiz can be delivered without a model in the loop.
+It is the engine that powers the scoring behind Study Studio: the desktop app runs a
+small piece of it, called `helix-core`, as a local sidecar on your machine.
 
-## What it does
+## What you can do with it
 
-- Event-sourced records with state reconstruction — every change is an event, and current state is a projection of the event log.
-- Citation-grounded learning content, generated through `content_engine/`.
-- Sealed quiz scoring — a scored result is appended once, and the store exposes no way to edit it. See *Try it* for what that does and does not guarantee.
-- Adaptive learning paths (`progress_engine/adaptive_paths/`).
-- Progress and milestone tracking with a portable, inspectable learning history.
-- Zero AI dependency in the core engine.
+- **Keep learning as evidence.** Every change is an event; current progress is
+  rebuilt from the event log, not stored as one mutable blob.
+- **Generate citation-grounded lessons** through the content engine.
+- **Score quizzes that can't be tampered with.** A result is written once and sealed;
+  the store exposes no way to edit it.
+- **Build adaptive learning paths** and track progress and milestones.
+- **Run it privately.** The core engine needs no cloud and no account.
 
-## How it fits Helix Codex
+## Before you start
 
-Helix Education is a **component** — the learning foundation Helix Codex would use. It
-is an **independent repository with no shared codebase** with Helix Prime. Its role in
-the story is real; its wiring into the core is not yet built. **Designed to supply the
-learning foundation; not yet integrated into Helix Prime.** The gRPC competency
-service exists in business logic (`CompetencyProfileLogic`) but its bindings are not
-generated and nothing mounts it, so the integration point is identified, not connected.
+You need **Python 3.11, 3.12 or 3.13**. The engine core itself needs nothing else.
+To generate lessons you will want a local model runtime (Ollama or LM Studio); to
+run the scoring service as a container you will need Docker.
 
-## Architecture
+## Get it and run it
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+python -m pytest -q          # 465 tests, all passing
+```
+
+The scoring service (`helix-core`) is its own distribution:
+
+```bash
+pip install helix-core
+helix-core --port 8765        # loopback only
+HELIX_CORE_TOKEN=... helix-core   # require a bearer token
+```
+
+## Is it private and safe? Straight answers
+
+- **Your record stays yours.** Learning state is stored locally (a SQLite event log);
+  the core needs no cloud and no account.
+- **Scores are sealed, not just stored.** A scored result is append-only at the store
+  API level, and the answer key lives in a separate store, verified with an HMAC before
+  every score. A key edited on disk fails verification and the service refuses to grade
+  rather than grading against the wrong answer.
+- **Verified.** 465 automated tests pass on Python 3.11, 3.12 and 3.13, and every CI
+  check is green. The parts that protect a learner's record — the event store, scoring,
+  projections and the sealed-key store — are covered by tests.
+- **Honest limits.** This is an early release (alpha). The gRPC competency service
+  exists in business logic but is not wired up, external grounding and LLM calls are
+  stubbed in tests, and it has not had an outside security audit.
+
+## Status
+
+**Version 2.1.1 — released 10 November 2026.** Two distributions ship from this
+repository: `helix-education` (the engine) and `helix-core` (the sealed scoring
+service, also published as a PyPI wheel and a GHCR container image). The CI badge at
+the top is the live build status.
+
+## For developers
+
+### How it fits the wider work
+
+Helix Education is the learning foundation the wider Helix work is designed to build
+on. Today it is **independently proven**: the desktop app Study Studio already calls
+its `helix-core` scoring service as a sidecar. Its wiring into Helix Prime is designed
+but not yet built — the gRPC competency service exists in business logic
+(`CompetencyProfileLogic`) but its bindings are not generated and nothing mounts it.
+
+### Architecture
 
 - `state_core/` — event sourcing, scoring, projections, sealed-key store.
 - `content_engine/` — citation-grounded lesson generation.
@@ -61,50 +93,17 @@ generated and nothing mounts it, so the integration point is identified, not con
 - `progress_engine/adaptive_paths/` — adaptive learning logic.
 - `api_layer/grpc/` — competency contract; service wiring remains pending.
 
-## Production status & test coverage
+### Core service (`helix_core`)
 
-Stated plainly and dated. This section is last by design.
+`helix_core` is the extracted kernel: a SQLite-backed append-only event store, a
+sealed answer-key store, deterministic multiple-choice scoring, and a small HTTP API.
+Product shells call this instead of scoring quizzes themselves.
 
-| Item | State | Snapshot |
-|---|---|---|
-| Tests | 465 passed | 2026-10-01 — [run 36807198469](https://github.com/Hatemshalaby15071979/Helix-Education/actions/runs/36807198469) at `4bd6c02` (latest code change; later commits are docs-only, see the live badge) |
-| Core event-sourced learning state | Implemented | 2026-09-27 |
-| gRPC competency service | Business logic exists; bindings not generated, registration commented out, nothing mounts it | 2026-09-27 |
-| External grounding | A deterministic stub, a generic HTTP client, and a web-search client ship; the tests use the stub | 2026-09-27 |
-| Production client deployment | None | 2026-09-27 |
-| External audit | None | 2026-09-27 |
-
-> [!WARNING]
-> The engine core has no AI dependency. The gRPC competency service is not wired, and external grounding or LLM services are mocked or stubbed in tests. The engine has not been integrated into Helix Prime. No external audit, no certified data isolation, no signed security review, no revenue.
-
-## Run it
-
-Python 3.11–3.13 are covered by the `Python package` CI matrix ([run 36807198387](https://github.com/Hatemshalaby15071979/Helix-Education/actions/runs/36807198387), 2026-10-01 — `465 passed` on 3.11, 3.12 and 3.13).
-
-```bash
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
-python -m pytest -q
-```
-
-## Core service (`helix_core`)
-
-`helix_core` is the extracted kernel: a SQLite-backed append-only event
-store, a sealed answer-key store, deterministic multiple-choice scoring,
-and a small HTTP API. Product shells call this instead of scoring quizzes
-themselves.
-
-It is a **separate distribution**, `helix-core`, in `packages/helix-core/`.
-It depends on `fastapi`, `pydantic` and `uvicorn` and on nothing else — this
-package's heavier dependencies (`ollama`, `requests`, `beautifulsoup4`,
-`cryptography`) are not installed with it. The two wheels are siblings, not
-parent and child: nothing in `helix_education` imports `helix_core`.
-
-```bash
-pip install helix-core
-helix-core --port 8765              # loopback only
-HELIX_CORE_TOKEN=... helix-core     # require a bearer token
-```
+It is a **separate distribution**, `helix-core`, in `packages/helix-core/`. It depends
+on `fastapi`, `pydantic` and `uvicorn` and on nothing else — this package's heavier
+dependencies (`ollama`, `requests`, `beautifulsoup4`, `cryptography`) are not installed
+with it. The two wheels are siblings, not parent and child: nothing in
+`helix_education` imports `helix_core`.
 
 | Endpoint | Purpose |
 |---|---|
@@ -114,10 +113,10 @@ HELIX_CORE_TOKEN=... helix-core     # require a bearer token
 | `GET /v1/quizzes/{id}/score` | current score summary |
 | `GET /v1/topics/{topic}/state` | projection from `answer_scored` events |
 
-Registration never returns `correct_index` or `explanation`. Those live in
-a separate `sealed_keys` table and are verified with an HMAC before every
-score; a key edited on disk fails verification and the API returns 409
-instead of grading against the wrong answer.
+Registration never returns `correct_index` or `explanation`. Those live in a separate
+`sealed_keys` table and are verified with an HMAC before every score; a key edited on
+disk fails verification and the API returns 409 instead of grading against the wrong
+answer.
 
 Build the wheels — one per distribution:
 
@@ -127,18 +126,17 @@ python -m build --wheel --outdir dist .                     # helix_education-2.
 python scripts/verify_distributions.py                      # asserts the split holds
 ```
 
-`scripts/verify_distributions.py` is what stops the two from quietly drifting
-back together: it fails if the core wheel grows a fourth dependency, if the
-parent wheel still contains `helix_core/`, or if either ships bytecode.
+`scripts/verify_distributions.py` is what stops the two from quietly drifting back
+together: it fails if the core wheel grows a fourth dependency, if the parent wheel
+still contains `helix_core/`, or if either ships bytecode.
 
-`scripts/check_release.py` is what stops the version from drifting: it fails
-if the two packages, the CHANGELOG and the git tags do not describe the same
-release.
+`scripts/check_release.py` is what stops the version from drifting: it fails if the two
+packages, the CHANGELOG and the git tags do not describe the same release.
 
 ### Container image
 
-The core also ships as a container. The image contains `helix_core/` only —
-no Ollama client, no scraper.
+The core also ships as a container. The image contains `helix_core/` only — no Ollama
+client, no scraper.
 
 ```bash
 docker build -t helix-core:2.1.1 .
@@ -147,26 +145,25 @@ docker run --rm -p 127.0.0.1:8765:8000 \
   helix-core:2.1.1
 ```
 
-`.github/workflows/docker.yml` builds it, runs a register/answer/score smoke
-test against `/v1/health`, and pushes
-`ghcr.io/<owner>/helix-core:{2.1.1,<sha>,latest}` **on version tags only**.
-A push to `main` builds and smoke-tests the image but does not publish it:
-an image published from a branch push is one nobody declared as a release.
+`.github/workflows/docker.yml` builds it, runs a register/answer/score smoke test
+against `/v1/health`, and pushes `ghcr.io/<owner>/helix-core:{2.1.1,<sha>,latest}` **on
+version tags only**. A push to `main` builds and smoke-tests the image but does not
+publish it: an image published from a branch push is one nobody declared as a release.
 
-`.github/workflows/publish-pypi.yml` publishes the wheels to PyPI, and is
-gated the same way — it runs for a `v*` tag, and the upload step also
-requires the `PYPI_API_TOKEN` secret to be present. Without the token the
-wheels are still built and checked, and nothing is uploaded.
+`.github/workflows/publish-pypi.yml` publishes the wheels to PyPI, and is gated the
+same way — it runs for a `v*` tag, and the upload step also requires the
+`PYPI_API_TOKEN` secret to be present. Without the token the wheels are still built and
+checked, and nothing is uploaded.
 
-Kubernetes manifests live in `deploy/k8s/` and deploy **one replica** — the
-store is SQLite, so more than one writer is corruption, not scale. Apply with
+Kubernetes manifests live in `deploy/k8s/` and deploy **one replica** — the store is
+SQLite, so more than one writer is corruption, not scale. Apply with
 `kubectl apply -k deploy/k8s` after creating the namespace secret;
-`deploy/DEPLOYMENT_RUNBOOK.md` has the full sequence, including backup and
-restore.
+`deploy/DEPLOYMENT_RUNBOOK.md` has the full sequence, including backup and restore.
 
-## Try it
+### See it work
 
-Replay a learner's state from an event log, then check that a sealed quiz result cannot be edited through the store API. Run from the repository root.
+Replay a learner's state from an event log, then check that a sealed quiz result cannot
+be edited through the store API. Run from the repository root.
 
 ```python
 from tempfile import TemporaryDirectory
@@ -190,7 +187,7 @@ with TemporaryDirectory() as tmp:
     print("persisted:", next(e.raw_score for e in store.read_all() if isinstance(e, AnswerScoredEvent)))
 ```
 
-Real output (2026-10-01, Python 3.13.12):
+Real output:
 
 ```
 replayed : safeguarding | attempts 1 | passes 1
@@ -199,13 +196,29 @@ edit API : none (append-only)
 persisted: 1.0
 ```
 
-The learner state is rebuilt from the log alone — nothing is carried in memory between the write and the replay. The last three lines are the sealing check: the store exposes no `update`, `delete` or `remove`, only `append`, so the rewrite attempt on the in-memory event never reaches the persisted record, which still reads `1.0`. The answer key is never written to the log; only its SHA-256 hash appears in the `QuizItemCreatedEvent`.
+The learner state is rebuilt from the log alone — nothing is carried in memory between
+the write and the replay. The last three lines are the sealing check: the store exposes
+no `update`, `delete` or `remove`, only `append`, so the rewrite attempt on the
+in-memory event never reaches the persisted record, which still reads `1.0`. The answer
+key is never written to the log; only its SHA-256 hash appears in the
+`QuizItemCreatedEvent`.
 
 What "sealed" guarantees, stated exactly:
 
-- **Append-only at the store API level.** `EventStore` exposes `append` and the read methods, and no operation that rewrites or removes an event already written. That is an API contract, not tamper-evidence: the log is a plain JSONL file, and anything with write access to the filesystem can edit it.
-- **Where keys live.** The answer key is held in a separate key store, never in the event log. The default location is `<user data dir>/helix-education/sealed_answer_keys.jsonl` — `%LOCALAPPDATA%` on Windows, `$XDG_DATA_HOME` or `~/.local/share` elsewhere. Override it with the `HELIX_SEALED_KEY_PATH` environment variable, or pass `StoreConfig.sealed_keys_path`. The working directory is never used, so running the engine cannot write state into a checkout.
-- **Not encrypted by default.** The default key store is plaintext JSONL. `EncryptedSealedKeyStore` (which now refuses to start without a configured master key rather than falling back to a built-in default) and the Vault adapter both exist in the tree, but neither is wired in.
+- **Append-only at the store API level.** `EventStore` exposes `append` and the read
+  methods, and no operation that rewrites or removes an event already written. That is
+  an API contract, not tamper-evidence: the log is a plain JSONL file, and anything with
+  write access to the filesystem can edit it.
+- **Where keys live.** The answer key is held in a separate key store, never in the
+  event log. The default location is `<user data dir>/helix-education/sealed_answer_keys.jsonl`
+  — `%LOCALAPPDATA%` on Windows, `$XDG_DATA_HOME` or `~/.local/share` elsewhere. Override
+  it with the `HELIX_SEALED_KEY_PATH` environment variable, or pass
+  `StoreConfig.sealed_keys_path`. The working directory is never used, so running the
+  engine cannot write state into a checkout.
+- **Not encrypted by default.** The default key store is plaintext JSONL.
+  `EncryptedSealedKeyStore` (which now refuses to start without a configured master key
+  rather than falling back to a built-in default) and the Vault adapter both exist in the
+  tree, but neither is wired in.
 
 ## Related work
 
@@ -213,7 +226,8 @@ What "sealed" guarantees, stated exactly:
 
 ## Author
 
-Built by Hatem Shalaby, Contact Centre Operations & AI Implementation Lead | WFM & CX Transformation. Background: https://github.com/Hatemshalaby15071979
+Built by Hatem Shalaby, Contact Centre Operations & AI Implementation Lead | WFM & CX
+Transformation. Background: https://github.com/Hatemshalaby15071979
 
 ## Licence
 
