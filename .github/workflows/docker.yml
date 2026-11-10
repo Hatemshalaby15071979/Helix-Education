@@ -13,7 +13,7 @@ name: Container image
 
 on:
   push:
-    branches: ["main"]
+    branches: ["**"]
     tags: ["v*"]
     paths:
       - "packages/helix-core/**"
