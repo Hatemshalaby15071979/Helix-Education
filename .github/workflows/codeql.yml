@@ -10,6 +10,9 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+  # So the analysis can be run on demand — before a change reaches main,
+  # or to re-run it without waiting for the next push.
+  workflow_dispatch:
   schedule:
     # Weekly, because a vulnerability disclosed against a dependency
     # shipped yesterday is not found by scanning yesterday's code.
