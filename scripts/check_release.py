@@ -115,6 +115,17 @@ def main() -> int:
         )
 
     # ── the tags ─────────────────────────────────────────────────────────
+    # A shallow clone has no tags, and "this release was never tagged"
+    # would be the wrong conclusion from it. Detect it and say so, rather
+    # than reporting a false problem for every release.
+    if git("rev-parse", "--is-shallow-repository") == "true":
+        print(
+            "check:release — this is a shallow clone, so the tags are not available.\n"
+            "              Fetch the history (`git fetch --unshallow`) and run this again.",
+            file=sys.stderr,
+        )
+        return 1
+
     tags = [t for t in git("tag", "--list").split("\n") if t]
     tagged_versions = {t.lstrip("v") for t in tags}
 

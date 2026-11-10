@@ -33,6 +33,12 @@ jobs:
         python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The release-consistency check reads the git tags, and
+          # actions/checkout defaults to a shallow clone that has none. A
+          # shallow clone makes the check report every released version as
+          # untagged — false problems that look like real ones.
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
