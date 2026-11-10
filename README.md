@@ -2,7 +2,7 @@
 
 # Helix Education
 
-[![CI](https://github.com/Hatemshalaby15071979/Helix-Education/actions/workflows/Python%20application/badge.svg)](https://github.com/Hatemshalaby15071979/Helix-Education/actions)
+[![CI](https://github.com/Hatemshalaby15071979/Helix-Education/actions/workflows/ci.yml/badge.svg)](https://github.com/Hatemshalaby15071979/Helix-Education/actions)
 ![licence](https://img.shields.io/badge/licence-MIT-blue)
 ![python](https://img.shields.io/badge/python-3.11%2B%20%E2%80%93%203.13-3776ab)
 ![status](https://img.shields.io/badge/status-2.1.1%20released-brightgreen)
