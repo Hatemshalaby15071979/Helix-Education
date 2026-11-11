@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -387,15 +388,23 @@ class _Handler(BaseHTTPRequestHandler):
     _f: FeedbackService = None
     _cog: CognitiveService = None
     _grounding: GroundingService = None
-    # Session cookie deferred from _get_session() to _send()
-    _pending_cookie: str | None = None
+    # Session id deferred from _get_session() to _send(). The cookie is built
+    # here, never from a header string, so no caller value can reach a header.
+    _pending_session_id: str | None = None
 
     def _send(self, body: str, status: int = 200, content_type: str = "text/html; charset=utf-8"):
         self.send_response(status)
         self.send_header("Content-Type", content_type)
-        if self._pending_cookie:
-            self.send_header("Set-Cookie", self._pending_cookie)
-            self._pending_cookie = None
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        if self._pending_session_id:
+            cookie = SimpleCookie()
+            cookie["session_id"] = self._pending_session_id
+            cookie["session_id"]["path"] = "/"
+            cookie["session_id"]["httponly"] = True
+            cookie["session_id"]["samesite"] = "Lax"
+            self.send_header("Set-Cookie", cookie.output(header="").strip())
+            self._pending_session_id = None
         self.end_headers()
         self.wfile.write(body.encode("utf-8"))
 
@@ -421,8 +430,8 @@ class _Handler(BaseHTTPRequestHandler):
             session_id = str(uuid.uuid4())
             SESSIONS[session_id] = SessionState()
         session = SESSIONS[session_id]
-        # Defer cookie to _send() to avoid sending header before send_response()
-        self._pending_cookie = f"session_id={session_id}; Path=/; HttpOnly; SameSite=Lax"
+        # Defer the cookie to _send(): headers cannot precede send_response().
+        self._pending_session_id = session_id
         return session
 
     def do_GET(self):
@@ -1210,14 +1219,13 @@ RESPOND WITH VALID JSON ONLY:
 # ═══════════════════════════════════════════════════════════════════════
 
 
-def main(host: str = "127.0.0.1", port: int = 8080):
-    print("🚀 Starting Helix Education Center V2...")
-    print(f"   Model: {OLLAMA_MODEL}")
-    print("   Grounding: Web search (authoritative sources)")
-    print("   Quiz: LLM-generated from sources")
-    print("   Evaluation: LLM semantic evaluation with reasoning")
+def init_services(*, announce: bool = True) -> dict:
+    """Build the service graph once and bind it to the handler.
 
-    # Initialize services
+    Called by both entrypoints: the legacy `HTTPServer` path in `main()` and the
+    ASGI path (`helix_education.asgi_app`). One builder means the two servers
+    cannot drift apart in what they construct.
+    """
     store = EventStore(StoreConfig(path="helix_events.jsonl"))
     ks = SealedAnswerKeyStore()
     llm_eval = LLMEvaluationService(agent_client=OllamaAgentClient(model_name=OLLAMA_MODEL), key_store=ks)
@@ -1240,8 +1248,32 @@ def main(host: str = "127.0.0.1", port: int = 8080):
     _Handler._grounding = grounding
     _Handler._llm_eval = llm_eval
 
-    topics = c.list_topics()
-    print(f"   Topics in store: {len(topics)}")
+    if announce:
+        topics = c.list_topics()
+        print(f"   Topics in store: {len(topics)}")
+
+    return {
+        "store": store,
+        "learning": l,
+        "content": c,
+        "quiz": q,
+        "feedback": f,
+        "cognitive": cog,
+        "grounding": grounding,
+        "llm_evaluation": llm_eval,
+    }
+
+
+def main(host: str = "127.0.0.1", port: int = 8080):
+    """Legacy single-threaded server. Kept for compatibility; see asgi_app.py."""
+    print("🚀 Starting Helix Education Center V2...")
+    print(f"   Model: {OLLAMA_MODEL}")
+    print("   Grounding: Web search (authoritative sources)")
+    print("   Quiz: LLM-generated from sources")
+    print("   Evaluation: LLM semantic evaluation with reasoning")
+
+    init_services()
+
     print(f"   Server: http://localhost:{port}")
     print("   Ready!")
 

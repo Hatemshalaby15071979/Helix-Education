@@ -7,6 +7,8 @@ the Predictive Gap Model, Content Catalog, and Event Store.
 
 import logging
 
+from observability.redaction import bucket_score, redact_id
+
 import pandas as pd
 
 from cognitive_engine.ml_models.predictive_gap_model import PredictiveGapModel
@@ -40,7 +42,7 @@ class LearningPathService:
         history_df = self._get_employee_history(employee_id)
 
         if history_df.empty:
-            logger.info(f"No history found for {employee_id}. Generating baseline path.")
+            logger.info(f"No history found for {redact_id(employee_id)}. Generating baseline path.")
             return []
 
         # 2. Predict gaps
@@ -75,7 +77,10 @@ class LearningPathService:
         # Adapt based on performance
         adapted_path = self.path_generator.adapt_path(current_path, quiz_score)
 
-        logger.info(f"Path for {employee_id} adapted after lesson {lesson_id} (Score: {quiz_score})")
+        logger.info(
+            f"Path for {redact_id(employee_id)} adapted after lesson {redact_id(lesson_id)} "
+            f"({bucket_score(quiz_score)})"
+        )
         return adapted_path
 
     def _get_employee_history(self, employee_id: str) -> pd.DataFrame:

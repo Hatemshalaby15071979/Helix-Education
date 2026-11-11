@@ -114,6 +114,36 @@ jobs:
       - name: Coverage floor
         run: pytest -q --cov --cov-report=term
 
+  # Audit P-5: the perf and stress suites existed but nothing ran them, so a
+  # throughput regression was invisible until a user felt it.
+  performance:
+    name: performance and stress
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package and dev tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e packages/helix-core
+          pip install -e ".[dev]"
+
+      # Each test carries its own wall-clock ceiling; see the assertions in
+      # tests/test_agent_performance.py.
+      - name: Perf and stress suites
+        run: pytest -q tests/test_agent_performance.py tests/test_agent_stress.py
+
+      # Serving model (audit P-1): concurrent requests must overlap, and the
+      # real handler must answer when served by uvicorn.
+      - name: ASGI serving model
+        run: pytest -q tests/test_asgi_server.py
+
   security:
     name: security (bandit)
     runs-on: ubuntu-latest

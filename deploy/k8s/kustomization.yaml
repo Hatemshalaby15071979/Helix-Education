@@ -14,8 +14,9 @@ resources:
   - namespace.yaml
   - pvc.yaml
   - deployment.yaml
+  - networkpolicy.yaml
   - service.yaml
 
 images:
   - name: ghcr.io/hatemshalaby15071979/helix-core
-    newTag: "2.1.0"
+    newTag: "2.1.1"

@@ -11,6 +11,8 @@ the .proto file and wired in before production deployment.
 """
 
 import logging
+
+from observability.redaction import redact_id
 from datetime import datetime
 
 from progress_engine.progress_service import ProgressService
@@ -56,7 +58,7 @@ class CompetencyProfileLogic:
                 "last_updated": datetime.utcnow().isoformat(),
             }
         except Exception as e:
-            logger.error(f"Error fetching competency profile for {employee_id}: {e}")
+            logger.error(f"Error fetching competency profile for {redact_id(employee_id)}: {type(e).__name__}")
             raise
 
     def update_proficiency(self, employee_id: str, skill_name: str, evidence_id: str):
@@ -65,10 +67,10 @@ class CompetencyProfileLogic:
         This triggers a new event in the EventStore to maintain append-only durability.
         """
         try:
-            logger.info(f"Updating proficiency for {employee_id} in {skill_name}")
+            logger.info(f"Updating proficiency for {redact_id(employee_id)} in {redact_id(skill_name)}")
             return {"success": True, "message": f"Proficiency update recorded for evidence {evidence_id}"}
         except Exception as e:
-            logger.error(f"Error updating proficiency for {employee_id}: {e}")
+            logger.error(f"Error updating proficiency for {redact_id(employee_id)}: {type(e).__name__}")
             raise
 
 

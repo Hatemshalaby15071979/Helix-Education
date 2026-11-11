@@ -15,7 +15,7 @@ metadata:
   labels:
     app.kubernetes.io/name: helix-core
     app.kubernetes.io/part-of: helix-education
-    app.kubernetes.io/version: "2.1.0"
+    app.kubernetes.io/version: "2.1.1"
 spec:
   replicas: 1
   strategy:
@@ -43,7 +43,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: helix-core
-          image: ghcr.io/hatemshalaby15071979/helix-core:2.1.0
+          image: ghcr.io/hatemshalaby15071979/helix-core:2.1.1
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

@@ -1,0 +1,56 @@
+# Default-deny, then the two flows this service actually needs.
+#
+# Why: without a NetworkPolicy every pod in the cluster can reach helix-core and
+# helix-core can reach anything. The service is a quiz/scoring API on a SQLite
+# volume; its only legitimate ingress is the ingress controller, and its only
+# legitimate egress is DNS. Anything else is either a mistake or an attacker.
+#
+# If a future change needs another egress (an object store, a metrics push), add
+# it here with a namespace selector and a named port — not by removing the deny.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: helix-core-default-deny
+  namespace: helix-education
+  labels:
+    app.kubernetes.io/part-of: helix-education
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: helix-core-allow
+  namespace: helix-education
+  labels:
+    app.kubernetes.io/part-of: helix-education
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: helix-core
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Only the ingress controller may open a connection to the API port.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    # DNS resolution only.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
