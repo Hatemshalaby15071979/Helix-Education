@@ -7,11 +7,10 @@ the Predictive Gap Model, Content Catalog, and Event Store.
 
 import logging
 
-from observability.redaction import bucket_score, redact_id
-
 import pandas as pd
 
 from cognitive_engine.ml_models.predictive_gap_model import PredictiveGapModel
+from observability.redaction import bucket_score, redact_id
 from state_core.event_store import EventStore
 
 from .path_generator import AdaptivePathGenerator
