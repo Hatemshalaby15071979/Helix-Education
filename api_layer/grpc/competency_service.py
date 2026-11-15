@@ -11,10 +11,9 @@ the .proto file and wired in before production deployment.
 """
 
 import logging
-
-from observability.redaction import redact_id
 from datetime import datetime
 
+from observability.redaction import redact_id
 from progress_engine.progress_service import ProgressService
 from state_core.event_store import EventStore
 

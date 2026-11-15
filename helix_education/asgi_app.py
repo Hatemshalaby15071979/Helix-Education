@@ -26,7 +26,8 @@ from __future__ import annotations
 import asyncio
 import io
 import os
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from .web_server_v2 import _Handler, init_services
 
