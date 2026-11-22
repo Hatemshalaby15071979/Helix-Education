@@ -14,7 +14,7 @@
 </div>
 
 <p float="left">
-  <strong>Helix Education 2.1.1<br></strong><br>
+  <strong>Helix Education 2.1.1</strong><br>
   <span style="font-size:0.9em;color:#93aaa0">by Helix Solutions</span>
 </p>
 
