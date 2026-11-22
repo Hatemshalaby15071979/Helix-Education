@@ -13,6 +13,11 @@
 
 </div>
 
+<p float="left">
+  <strong>Helix Education 2.1.1<br></strong><br>
+  <span style="font-size:0.9em;color:#93aaa0">by Helix Solutions</span>
+</p>
+
 ## What it is
 
 Helix Education is a learning engine. It records what a person learns as a chain of
