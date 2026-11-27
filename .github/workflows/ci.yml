@@ -191,3 +191,17 @@ jobs:
           name: wheels
           path: dist/*.whl
           if-no-files-found: error
+
+  # GOVERNANCE.md section 2: the root holds only the documented set. The gate parses
+  # that table out of GOVERNANCE.md, asserts both directions (every named document is
+  # present, and no unlisted .md/.txt sits at the root), and self-tests that it fails
+  # closed. It needs nothing but python3 and a checkout.
+  governance:
+    name: root-document hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Root-document hygiene (GOVERNANCE.md section 2)
+        run: |
+          python3 scripts/check_root_docs.py
+          python3 scripts/check_root_docs.py --self-test
