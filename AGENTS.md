@@ -76,3 +76,19 @@ Verification: Planned — `python3 scripts/check_root_docs.py` and `--self-test`
 Left undone: Nothing at sign-in.
 
 Sensitive: `git push origin main` (owner's instruction in chat, 2026-11-27). No force push, no history rewrite, no secrets.
+
+## [2026-11-27 05:27 EET] — sami (OpenMausBot), owner-authorised governance landing
+
+STATUS: SIGN-OUT (landing complete)
+
+Task: Bring this repository onto the portfolio governance standard. Done.
+
+Touched: `AGENTS.md`, `GOVERNANCE.md`, `SECURITY.md` (new); `CONSTITUTION.md` (new, md5 `7b3339292cb98b1e1fe67b768ab1d79d`, the portfolio text); `scripts/check_root_docs.py` (new, md5 `35fc37ab16ff4461a33d4e2dcaedb7bf`); `EVIDENCE_TEST_REMEDIATION.md` → `docs/ARCHIVE/EVIDENCE_TEST_REMEDIATION.md`; `.github/workflows/ci.yml` (one new `governance` job). `CHANGELOG.md` was deliberately not touched. Nothing deleted.
+
+Why: The repository had a changelog and a real release gate but no charter, no portfolio constitution, no root security policy, no written policy for the root and no enforcement of one, and a dated remediation report sat at the root. `docs/CONSTITUTION.md` — a different, project-specific constitution linked from four living documents — was **not** touched and is recorded as an unresolved duplication in `GOVERNANCE.md` section 2. The archived report kept this repository's own spelling, `docs/ARCHIVE/`, rather than introducing a second, differently-cased directory; that spelling difference is recorded too.
+
+Verification: `scripts/check_root_docs.py` → "OK — Helix-Education/ holds only the GOVERNANCE.md section 2 set" (7 table rows, 7 allowed root documents); `--self-test` → 7/7 cases behaved. On the way in, the gate refused the landing until `EVIDENCE_TEST_REMEDIATION.md` was moved — which is the gate doing its job, recorded rather than glossed over. The existing gates were re-run and are green: `ruff check .` → "All checks passed!" (this includes the new gate file, which matters because this repository lints the whole tree), `scripts/check_release.py` → "check:release — OK. The manifests, the CHANGELOG and the tags agree." (root package 2.1.1, helix-core 2.1.1, changelog top 2.1.1, tags v1.0.0, v1.1.0, v2.1.0, v2.1.1), `compileall` exit 0, root suite `469 passed`, `packages/helix-core` suite `35 passed`. The workflow still parses (jobs: `test`, `coverage`, `performance`, `security`, `packages`, `governance`).
+
+Left undone: Nothing failing. One environment note for the next agent, not a repo defect: `scripts/check_release.py` shells out to `git`, and in this workspace `git` is only reachable through the wrapper at `/home/cua/workspace/tools/git.sh`; a `git` shim on `PATH` is needed for it to run. CI on `dec6c39` and the sign-out commit is the record of the same steps on a clean runner.
+
+Sensitive: `git push origin main` (owner's instruction in chat, 2026-11-27). No force push, no history rewrite, no secrets.
